@@ -3,9 +3,9 @@ const fs = require('fs');
 require('dotenv').config();
 
 const REGISTRATION_FILE = './registrations.json';
-const ADMIN_CHANNEL_ID = ''; // Substitua pelo ID do canal de administração
-const APPROVAL_CHANNEL_ID = ''; // Substitua pelo ID do canal de aprovação
-const REJECTION_CHANNEL_ID = ''; // Substitua pelo ID do canal de reprovação
+const ADMIN_CHANNEL_ID = '';
+const APPROVAL_CHANNEL_ID = '';
+const REJECTION_CHANNEL_ID = ''; 
 
 function loadRegistrations() {
     if (!fs.existsSync(REGISTRATION_FILE)) {
@@ -142,9 +142,9 @@ client.on('interactionCreate', async interaction => {
 
     if (interaction.isStringSelectMenu() && interaction.customId.startsWith('profissao_')) {
         const professionValue = interaction.values[0];
-        registrations[interaction.user.id].profession = professionValue; // Salvar a profissão escolhida
-        registrations[interaction.user.id].origin = null; // Inicializar origem
-        registrations[interaction.user.id].status = 'pendente'; // Status é "pendente" até ser aprovado
+        registrations[interaction.user.id].profession = professionValue;
+        registrations[interaction.user.id].origin = null;
+        registrations[interaction.user.id].status = 'pendente';
 
         saveRegistrations(registrations);
 
@@ -177,11 +177,11 @@ client.on('interactionCreate', async interaction => {
     if (interaction.isStringSelectMenu() && interaction.customId.startsWith('origem_')) {
         const originValue = interaction.values[0];
         registrations[interaction.user.id].origin = originValue;
-        registrations[interaction.user.id].status = 'pendente'; // Status é "pendente" até ser aprovado
+        registrations[interaction.user.id].status = 'pendente';
 
         saveRegistrations(registrations);
 
-        // Enviar a notificação no canal de administração com botões de aprovação e reprovação
+        
         const adminChannel = await client.channels.fetch(ADMIN_CHANNEL_ID);
         if (adminChannel) {
             const approveButton = new ButtonBuilder()
@@ -212,7 +212,6 @@ client.on('interactionCreate', async interaction => {
     if (interaction.isButton() && interaction.customId.startsWith('aprovar_')) {
         const userId = interaction.customId.split('_')[1];
 
-        // Verificar se a interação já foi realizada
         if (registrations[userId].reviewed) {
             return interaction.reply({
                 content: '⚠️ Este registro já foi aprovado ou reprovado.',
@@ -220,8 +219,8 @@ client.on('interactionCreate', async interaction => {
             });
         }
 
-        registrations[userId].status = 'aprovado'; // Aprova o registro
-        registrations[userId].reviewed = true; // Marcar como revisado
+        registrations[userId].status = 'aprovado';
+        registrations[userId].reviewed = true;
         saveRegistrations(registrations);
 
         const user = await client.users.fetch(userId);
@@ -229,7 +228,6 @@ client.on('interactionCreate', async interaction => {
             await user.send('✅ Seu registro foi aprovado!');
         }
 
-        // Enviar a notificação no canal de aprovação
         const approvalChannel = await client.channels.fetch(APPROVAL_CHANNEL_ID);
         if (approvalChannel) {
             await approvalChannel.send(`✅ Registro de <@${userId}> aprovado!`);
@@ -244,7 +242,6 @@ client.on('interactionCreate', async interaction => {
     if (interaction.isButton() && interaction.customId.startsWith('reprovar_')) {
         const userId = interaction.customId.split('_')[1];
 
-        // Verificar se a interação já foi realizada
         if (registrations[userId].reviewed) {
             return interaction.reply({
                 content: '⚠️ Este registro já foi aprovado ou reprovado.',
@@ -252,8 +249,8 @@ client.on('interactionCreate', async interaction => {
             });
         }
 
-        registrations[userId].status = 'reprovado'; // Reprova o registro
-        registrations[userId].reviewed = true; // Marcar como revisado
+        registrations[userId].status = 'reprovado';
+        registrations[userId].reviewed = true;
         saveRegistrations(registrations);
 
         const user = await client.users.fetch(userId);
@@ -261,7 +258,6 @@ client.on('interactionCreate', async interaction => {
             await user.send('❌ Seu registro foi reprovado.');
         }
 
-        // Enviar a notificação no canal de reprovação
         const rejectionChannel = await client.channels.fetch(REJECTION_CHANNEL_ID);
         if (rejectionChannel) {
             await rejectionChannel.send(`❌ Registro de <@${userId}> reprovado!`);
