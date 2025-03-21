@@ -3,9 +3,11 @@ const fs = require('fs');
 require('dotenv').config();
 
 const REGISTRATION_FILE = './registrations.json';
-const ADMIN_CHANNEL_ID = '';
-const APPROVAL_CHANNEL_ID = '';
-const REJECTION_CHANNEL_ID = ''; 
+const ADMIN_CHANNEL_ID = ''; // ID OF ADMIN CHANNEL
+const APPROVAL_CHANNEL_ID = ''; // ID OF APROVATE CHANNEL
+const REJECTION_CHANNEL_ID = ''; // IF OF REPROVATE CHANNEL
+
+
 
 function loadRegistrations() {
     if (!fs.existsSync(REGISTRATION_FILE)) {
@@ -21,7 +23,12 @@ function saveRegistrations(data) {
 let registrations = loadRegistrations();
 
 const client = new Client({
-    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages]
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.DirectMessages
+    ]
 });
 
 client.once('ready', async () => {
@@ -43,6 +50,32 @@ client.once('ready', async () => {
         console.log('✅ Comandos registrados com sucesso!');
     } catch (error) {
         console.error('❌ Erro ao registrar comandos:', error);
+    }
+});
+
+client.on('messageCreate', async message => {
+    if (message.author.bot || !message.content.startsWith('!limpardm')) return;
+
+    if (message.channel.type !== 1) {
+        return message.reply('Este comando só pode ser usado na DM.');
+    }
+
+    try {
+        const messages = await message.channel.messages.fetch();
+        const botMessages = messages.filter(msg => msg.author.id === client.user.id);
+
+        if (botMessages.size === 0) {
+            return message.reply('Não há mensagens do bot para apagar.');
+        }
+
+        botMessages.forEach(async msg => {
+            await msg.delete();
+        });
+
+        console.log(`Foram apagadas ${botMessages.size} mensagens da DM.`);
+    } catch (error) {
+        console.error('Erro ao apagar mensagens:', error);
+        message.reply('Ocorreu um erro ao tentar limpar as mensagens.');
     }
 });
 
@@ -142,9 +175,9 @@ client.on('interactionCreate', async interaction => {
 
     if (interaction.isStringSelectMenu() && interaction.customId.startsWith('profissao_')) {
         const professionValue = interaction.values[0];
-        registrations[interaction.user.id].profession = professionValue;
-        registrations[interaction.user.id].origin = null;
-        registrations[interaction.user.id].status = 'pendente';
+        registrations[interaction.user.id].profession = professionValue; 
+        registrations[interaction.user.id].origin = null; 
+        registrations[interaction.user.id].status = 'pendente'; 
 
         saveRegistrations(registrations);
 
@@ -181,7 +214,7 @@ client.on('interactionCreate', async interaction => {
 
         saveRegistrations(registrations);
 
-        
+
         const adminChannel = await client.channels.fetch(ADMIN_CHANNEL_ID);
         if (adminChannel) {
             const approveButton = new ButtonBuilder()
@@ -212,6 +245,7 @@ client.on('interactionCreate', async interaction => {
     if (interaction.isButton() && interaction.customId.startsWith('aprovar_')) {
         const userId = interaction.customId.split('_')[1];
 
+
         if (registrations[userId].reviewed) {
             return interaction.reply({
                 content: '⚠️ Este registro já foi aprovado ou reprovado.',
@@ -220,7 +254,7 @@ client.on('interactionCreate', async interaction => {
         }
 
         registrations[userId].status = 'aprovado';
-        registrations[userId].reviewed = true;
+        registrations[userId].reviewed = true; 
         saveRegistrations(registrations);
 
         const user = await client.users.fetch(userId);
@@ -228,6 +262,7 @@ client.on('interactionCreate', async interaction => {
             await user.send('✅ Seu registro foi aprovado!');
         }
 
+        // Enviar a notificação no canal de aprovação
         const approvalChannel = await client.channels.fetch(APPROVAL_CHANNEL_ID);
         if (approvalChannel) {
             await approvalChannel.send(`✅ Registro de <@${userId}> aprovado!`);
@@ -249,8 +284,8 @@ client.on('interactionCreate', async interaction => {
             });
         }
 
-        registrations[userId].status = 'reprovado';
-        registrations[userId].reviewed = true;
+        registrations[userId].status = 'reprovado'; 
+        registrations[userId].reviewed = true; 
         saveRegistrations(registrations);
 
         const user = await client.users.fetch(userId);
