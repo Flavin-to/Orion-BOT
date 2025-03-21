@@ -65,4 +65,4 @@ Feel free to open **Issues** and **Pull Requests** to suggest improvements! 💡
 
 ---
 
-🔹 **Developed for the Valdoria server community!**
+🔹 **Developed for the Orion server community!**
