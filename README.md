@@ -61,7 +61,7 @@ Feel free to open **Issues** and **Pull Requests** to suggest improvements! 💡
 ---
 
 ## 📜 License
-This project is under the **MIT** license.
+© 2025 **Flavin**. All rights reserved.
 
 ---
 
